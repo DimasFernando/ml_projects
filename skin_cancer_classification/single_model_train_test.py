@@ -9,11 +9,8 @@ It does not use .h5 but the new format to save models.
 v4
 Code that saves all training history in a pickle file.
 Saves AUC, ROC, etc as part of the history, in this pickle file.
-
-Aldebaro, 2023
 """
-
-#  tutorial in part from https://wandb.ai/sayakpaul/efficientnet-tl/reports/Transfer-Learning-With-the-EfficientNet-Family-of-Models--Vmlldzo4OTg1Nw
+# tutorial in part from https://wandb.ai/sayakpaul/efficientnet-tl/reports/Transfer-Learning-With-the-EfficientNet-Family-of-Models--Vmlldzo4OTg1Nw
 
 import argparse
 import os
@@ -146,8 +143,8 @@ def get_training_model_effnet(url, trainable=False):
 
 
 def get_training_model_fixed():
-    # img_width = 240
-    # img_height = 240
+    # img_width = 240p
+    # img_height = 240p
     # original images have width = 600 and height = 450 pixels
     # divide by 5:
     img_width = 120
@@ -155,7 +152,7 @@ def get_training_model_fixed():
     # Define the input shape of the images
     input_shape = (img_width, img_height, 3)
 
-    #  num_output_neurons = 1
+    num_output_neurons = 1
 
     # Define the CNN model
     model = Sequential()
@@ -287,7 +284,7 @@ if __name__ == "__main__":
 
     plt.close("all")
 
-    #%% CHECK ALL VARIABLES AND REPLACE VALUES AS NEEDED
+    # %% CHECK ALL VARIABLES AND REPLACE VALUES AS NEEDED
     simulation_ID = 22  # model from Optuna, but using AUC as loss instead of accuracy
     # --------------------------------------------------------------------------
     # num_desired_train_examples = 40
@@ -373,7 +370,7 @@ if __name__ == "__main__":
     img_height = 90
     image_size = (img_width, img_height)
     batch_size = 12
-    epochs = 100
+    epochs = 30
     num_classes = 2
 
     base_name = MODEL_NAME + str(num_desired_train_examples)
@@ -387,7 +384,7 @@ if __name__ == "__main__":
         os.makedirs(output_dir)
         print("Created folder ", output_dir)
 
-    #%%
+    # %%
     # copy script
     copied_script = os.path.join(output_dir, os.path.basename(sys.argv[0]))
     shutil.copy2(sys.argv[0], copied_script)
