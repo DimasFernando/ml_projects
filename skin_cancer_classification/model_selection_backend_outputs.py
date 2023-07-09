@@ -1,4 +1,5 @@
 '''
+Modified by DataPlus Team!
 This version does not use generators but the pre-calculated outputs of the backend, to save time.
 
 Performs hyperparameter search using Optuna (https://github.com/optuna/optuna-examples/blob/main/keras/keras_simple.py)
@@ -10,49 +11,46 @@ References:
 https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/003_efficient_optimization_algorithms.html#pruning
 '''
 
-#from math import exp
-import tensorflow as tf
-#import tensorflow_hub as hub
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Input, Dropout, GlobalAveragePooling2D, BatchNormalization
-from tensorflow.keras.optimizers import Adam
-#import tensorflow_hub as hub
-#from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import matplotlib.pyplot as plt
-import numpy as np
-#import sklearn.metrics 
-#from sklearn.metrics import confusion_matrix, roc_curve, auc, recall_score, f1_score, precision_score, precision_recall_curve
-#from tensorflow.keras.models import Model
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.backend import clear_session
 #import seaborn as sn
 import os
-import sys
-import shutil
 import pickle
+import shutil
+import sys
+
+#import tensorflow_hub as hub
+#from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import matplotlib.pyplot as plt 
+import numpy as np
+import optuna
 #import argparse
 import pandas as pd
-from tensorflow.keras.applications.resnet import ResNet152, preprocess_input
-from tensorflow.keras.callbacks import TensorBoard
-#import urllib
-#import warnings
-from tensorflow.keras import regularizers
-
-import optuna
-from optuna.integration import TFKerasPruningCallback
-
-from tensorflow.keras.optimizers import RMSprop
-
+#from math import exp
+import tensorflow as tf
 #To avoid the warning in
 #https://github.com/tensorflow/tensorflow/issues/47554
 from absl import logging
+from optuna.integration import TFKerasPruningCallback
+#import urllib
+#import warnings
+from tensorflow.keras import regularizers
+from tensorflow.keras.backend import clear_session
+#import sklearn.metrics 
+#from sklearn.metrics import confusion_matrix, roc_curve, auc, recall_score, f1_score, precision_score, precision_recall_curve
+#from tensorflow.keras.models import Model
+from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
+                                        ReduceLROnPlateau, TensorBoard)
+from tensorflow.keras.layers import (BatchNormalization, Conv2D, Dense,
+                                     Dropout, Flatten, MaxPooling2D)
+#import tensorflow_hub as hub
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam
+
 logging.set_verbosity(logging.ERROR)
 
 #gpus = tf.config.experimental.list_physical_devices('GPU')
 #tf.config.experimental.set_memory_growth(gpus[0], True)
 if False:
-    from tensorflow.compat.v1 import ConfigProto
-    from tensorflow.compat.v1 import InteractiveSession
+    from tensorflow.compat.v1 import ConfigProto, InteractiveSession
 
     def fix_gpu():
         config = ConfigProto()
@@ -62,10 +60,10 @@ if False:
     fix_gpu()
 
 # Global variables
-ID = 52 # identifier for this simulation - use USE_CLASS_WEIGHT=True and 3000 examples (unbalanced) instead of 648 - only 3 parameters
+ID = 56 # identifier for this simulation - use USE_CLASS_WEIGHT=True and 3000 examples (unbalanced) instead of 648 - only 3 parameters
 USE_CLASS_WEIGHT = False # class weight for unbalanced sets
 EPOCHS = 100 # maximum number of epochs
-NUM_OPTUNA_TRIALS = 150 
+NUM_OPTUNA_TRIALS = 40 
 #IMAGESIZE = (240, 240)      # Define the input shape of the images
 INPUTSHAPE = (1280,) # (240, 240, 3)  # NN input
 #BEST_MODEL = None # Best NN model 
@@ -139,7 +137,7 @@ def objective(trial): # uses effnet
     batch_size = trial.suggest_int("batch_size", 1, 15) 
     num_dense_layers = trial.suggest_int("num_dense_layers", 1, 4) # number of layers
     num_neurons_per_layer = np.zeros(num_dense_layers, dtype=np.int64)
-    num_neurons_per_layer[0] = trial.suggest_int("neurons_L1", 10, 3000)
+    num_neurons_per_layer[0] = trial.suggest_int("neurons_L1", 10, 5000)
     for i in range(num_dense_layers-1):
         # force number of neurons to not increase in consecutive layers
         num_neurons_per_layer[i+1] = trial.suggest_int("neurons_L{}".format(i+2), num_neurons_per_layer[i]//4, num_neurons_per_layer[i])
@@ -233,7 +231,7 @@ def objective(trial): # uses effnet
     best_model_name = os.path.join(OUTPUT_DIR, best_model_name)
     best_model_save = ModelCheckpoint(best_model_name, save_best_only=True, monitor=metric_to_monitor, mode=metric_mode)
 
-    reduce_lr_loss = ReduceLROnPlateau(monitor=metric_to_monitor, factor=0.5, patience=3, verbose=VERBOSITY_LEVEL, min_delta=1e-4, mode=metric_mode)
+    reduce_lr_loss = ReduceLROnPlateau(monitor=metric_to_monitor, factor=0.2, patience=3, verbose=VERBOSITY_LEVEL, min_delta=1e-4, mode=metric_mode)
     # Define Tensorboard as a Keras callback
     tensorboard = TensorBoard(
     log_dir= '.\logoptuna',
